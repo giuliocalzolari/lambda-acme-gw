@@ -24,8 +24,8 @@ functions:
   apigw:
     handler: api.lambda_handler
     runtime: python3.9
-    memorySize: "128"
-    timeout: 30
+    memorySize: "256"
+    timeout: 900
     environment:
       XTOKEN: "${{ssm:/timecard/prod/apitoken}}"
       S3_BUCKET:
