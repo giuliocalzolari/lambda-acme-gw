@@ -49,6 +49,17 @@ class SFNHelper(object):
                 )
         return _uuid
 
+    def describe_execution(self, uuid):
+        execution_arn = self.step_function_arn.replace("stateMachine", "execution")
+        response = self.client.describe_execution(
+                    executionArn="{}:{}".format(execution_arn, uuid)
+                )
+        return {
+            "status": response["status"],
+            "output": response.get("output", ""),
+        }
+
+
 
 class ACMHelper(object):
     def __init__(self, session, domain=None):

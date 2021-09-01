@@ -39,7 +39,7 @@ def get_certificate(event):
 
     uuid = sfn.invoke_sfn(event)
     return {
-        "mgs": "execution in progress",
+        "msg": "execution in progress",
         "id": uuid
     }, 202
 
@@ -50,8 +50,9 @@ def get_certificate(event):
     session = boto3.Session()
     sfn = SFNHelper(session)
 
-    uuid = event["queryStringParameters"].get("uuid", None)
+    uuid = event.get("queryStringParameters", {}).get("id", None)
     if not uuid:
         return "exection id wrong", 500
     else:
-        return "TODO", 202
+        status = sfn.describe_execution(uuid)
+        return status, 200
