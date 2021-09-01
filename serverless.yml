@@ -2,16 +2,6 @@
 service: acme
 frameworkVersion: '^2.57.0'
 
-
-plugins:
-  - serverless-python-requirements
-
-custom:
-  pythonRequirements:
-    dockerizePip: non-linux
-
-
-
 provider:
   name: aws
   # lambdaHashingVersion: 20201221
