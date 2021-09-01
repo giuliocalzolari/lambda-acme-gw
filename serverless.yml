@@ -1,5 +1,7 @@
 # serverless.yml
 service: acme
+frameworkVersion: '^2.57.0'
+
 
 plugins:
   - serverless-python-requirements

@@ -17,16 +17,27 @@ jobs:
       matrix:
         node-version: [14.x]
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v2
+
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
 
-    - name: install Serverless plugins
-      uses: serverless/github-action@master
+    # - name: install Serverless plugins
+    #   uses: serverless/github-action@master
+    #   with:
+    #     args: plugin install --name serverless-python-requirements
+
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
       with:
-        args: plugin install --name serverless-python-requirements
+        python-version: 3.9
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install --target . -r requirements.txt
 
     - name: Serverless deploy
       uses: serverless/github-action@master
