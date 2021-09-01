@@ -4,10 +4,9 @@ frameworkVersion: '^2.57.0'
 
 provider:
   name: aws
-  # lambdaHashingVersion: 20201221
+  lambdaHashingVersion: 20201221
   stage: ${{env:STAGE_NAME, 'prod'}}
   region: eu-west-1
-  # variableSyntax: "\\${{([ ~:a-zA-Z0-9._\\'\",\\-\\/\\(\\)]+?)}}" # notice the double quotes for yaml to ignore the escape characters!
   role: LambdaIAMRole
   deploymentBucket:
     name: gc-bin

@@ -39,11 +39,11 @@ def lambda_handler(event, context):
 @app.route('/get_certificate')
 def get_certificate(event):
 
-    print(json.dumps(event, indent=4))
+    # print(json.dumps(event, indent=4))
 
-    doms = event["body"].get("domains", "").split(",")
-    prod = event["body"].get("prod", False)
-    user = event["body"].get("user", "glenkmurray@armyspy.com")
+    doms = event["queryStringParameters"].get("domains", "").split(",")
+    prod = event["queryStringParameters"].get("prod", False)
+    user = event["queryStringParameters"].get("user", "glenkmurray@armyspy.com")
     session = boto3.Session()
     r53 = Route53ChallengeCompleter(session)
     s3 = S3Helper(session)
