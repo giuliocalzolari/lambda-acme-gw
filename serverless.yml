@@ -1,0 +1,121 @@
+# serverless.yml
+service: acme
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: non-linux
+
+provider:
+  name: aws
+  lambdaHashingVersion: 20201221
+  stage: ${{env:STAGE_NAME, 'prod'}}
+  region: eu-west-1
+  variableSyntax: "\\${{([ ~:a-zA-Z0-9._\\'\",\\-\\/\\(\\)]+?)}}" # notice the double quotes for yaml to ignore the escape characters!
+  role: LambdaIAMRole
+  deploymentBucket:
+    name: gc-bin
+  stackTags: # Optional CF stack tags
+    Owner: giulio.calzolari@cloudreach.com
+    Purpose: acme-gw
+
+package:
+  exclude:
+    - .serverless/**
+    - .git**
+    - env**
+    - venv**
+
+
+functions:
+  apigw:
+    handler: api.lambda_handler
+    runtime: python3.8
+    memorySize: "128"
+    timeout: 30
+    environment:
+      XTOKEN: "${{ssm:/timecard/prod/apitoken}}"
+      S3_BUCKET:
+        Fn::Join:
+            - ''
+            -
+              - 'acme'
+              - Ref: 'AWS::Region'
+              - "-"
+              - Ref: 'AWS::AccountId'
+              - 'storage'
+    events:
+      - http:
+          path: /get_certificate
+          method: get
+
+resources:
+  Description: ACME Gateway
+  Resources:
+    ApigwLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        RetentionInDays: "90"
+
+
+    S3Bucket:
+      Type: 'AWS::S3::Bucket'
+      Properties:
+        BucketName:
+          Fn::Join:
+            - ''
+            -
+              - 'acme'
+              - Ref: 'AWS::Region'
+              - "-"
+              - Ref: 'AWS::AccountId'
+              - 'storage'
+        BucketEncryption:
+          ServerSideEncryptionConfiguration:
+            - ServerSideEncryptionByDefault:
+                SSEAlgorithm: AES256
+
+    LambdaIAMRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: "acme-gw-${{self:provider.stage}}"
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: S3
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - s3:*
+                  Resource:
+                    - '*'
+
+          - PolicyName: CloudwatchLog
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - logs:Describe*
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource:
+                    - 'Fn::Join':
+                      - ':'
+                      -
+                        - 'arn:aws:logs'
+                        - Ref: 'AWS::Region'
+                        - Ref: 'AWS::AccountId'
+                        - 'log-group:/aws/lambda/*:*:*'
+

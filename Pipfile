@@ -1,0 +1,14 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+acme = "*"
+boto3 = "*"
+simple_acme_dns = "*"
+
+
+
+[requires]
+python_version = "3.6"

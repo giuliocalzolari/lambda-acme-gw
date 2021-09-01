@@ -1,0 +1,33 @@
+name: Deploy
+
+on:
+  push:
+    tags:
+    - '*'
+
+jobs:
+  deploy:
+    name: deploy
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [14.x]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm ci
+
+
+    - name: Serverless deploy
+      uses: serverless/github-action@master
+      with:
+        args: -c "serverless plugin install --name serverless-python-requirements && serverless deploy --stage=prod --verbose"
+        entrypoint: /bin/bash
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        SLS_DEBUG: 1
+
