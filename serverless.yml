@@ -27,6 +27,7 @@ functions:
     memorySize: "128"
     timeout: 35 # ApiGW has a built-in timeout of 30 sec
     environment:
+      XTOKEN: "${{ssm:/timecard/prod/apitoken}}"
       SFN_ARN:
         Fn::Join:
             - ''
@@ -51,7 +52,6 @@ functions:
     memorySize: "512"
     timeout: 900
     environment:
-      XTOKEN: "${{ssm:/timecard/prod/apitoken}}"
       SFN_ARN:
         Fn::Join:
             - ''
@@ -75,6 +75,11 @@ resources:
   Description: ACME Gateway
   Resources:
     ApigwLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        RetentionInDays: "90"
+
+    WorkerLogGroup:
       Type: AWS::Logs::LogGroup
       Properties:
         RetentionInDays: "90"

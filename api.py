@@ -9,7 +9,7 @@ app = router()
 
 
 def lambda_handler(event, context):
-    # print(json.dumps(event, indent=4))
+    print(json.dumps(event, indent=4))
     h = event["headers"]
     if "x-token" not in h:
         return  {
@@ -34,7 +34,6 @@ def lambda_handler(event, context):
 
 @app.route('/get_certificate')
 def get_certificate(event):
-    # print(json.dumps(event, indent=4))
     session = boto3.Session()
     sfn = SFNHelper(session)
 
