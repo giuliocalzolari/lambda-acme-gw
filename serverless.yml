@@ -8,12 +8,14 @@ custom:
   pythonRequirements:
     dockerizePip: non-linux
 
+
+
 provider:
   name: aws
-  lambdaHashingVersion: 20201221
+  # lambdaHashingVersion: 20201221
   stage: ${{env:STAGE_NAME, 'prod'}}
   region: eu-west-1
-  variableSyntax: "\\${{([ ~:a-zA-Z0-9._\\'\",\\-\\/\\(\\)]+?)}}" # notice the double quotes for yaml to ignore the escape characters!
+  # variableSyntax: "\\${{([ ~:a-zA-Z0-9._\\'\",\\-\\/\\(\\)]+?)}}" # notice the double quotes for yaml to ignore the escape characters!
   role: LambdaIAMRole
   deploymentBucket:
     name: gc-bin
@@ -22,17 +24,15 @@ provider:
     Purpose: acme-gw
 
 package:
-  exclude:
-    - .serverless/**
-    - .git**
-    - env**
-    - venv**
+  patterns:
+    - "!.serverless/**"
+    - "!.git**"
 
 
 functions:
   apigw:
     handler: api.lambda_handler
-    runtime: python3.8
+    runtime: python3.9
     memorySize: "128"
     timeout: 30
     environment:
