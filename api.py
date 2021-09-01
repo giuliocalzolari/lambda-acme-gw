@@ -112,9 +112,6 @@ def get_certificate(event):
             client.certificate.decode(),
         )
 
-
-
-
     print("cleaup dns challange")
     for r in dns_records:
         r53.delete_txt_record(r["zone_id"], r["record"], r["value"])
