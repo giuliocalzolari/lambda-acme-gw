@@ -72,7 +72,7 @@ resources:
     LambdaIAMRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: "acme-gw-${{self:provider.stage}}"
+        RoleName: "acme_gw_${{self:provider.stage}}"
         AssumeRolePolicyDocument:
           Version: '2012-10-17'
           Statement:
