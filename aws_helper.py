@@ -3,6 +3,7 @@ import time
 import boto3
 import os
 import json
+import uuid
 
 
 class S3Helper(object):
@@ -28,6 +29,25 @@ class S3Helper(object):
             Key=key
         )
         return "s3://{}/{}".format(self.bucket, key)
+
+
+
+class SFNHelper(object):
+    def __init__(self, session, s3=None):
+        self.client = session.client("stepfunctions")
+        self.step_function_arn = os.environ.get("SFN_ARN", s3)
+        if not self.step_function_arn:
+            raise Exception("[SFN_ARN] OS variable is not set")
+
+    
+    def invoke_sfn(self, event):
+        uuid = str(uuid.uuid4())
+        self.client.start_execution(
+                    stateMachineArn=self.step_function_arn,
+                    name=uuid,
+                    input=json.dumps(event)
+                )
+        return uuid
 
 
 class ACMHelper(object):
@@ -76,7 +96,7 @@ class ACMHelper(object):
             kwargs["CertificateArn"] = certificate_arn
         acm_response = self.client.import_certificate(**kwargs)
 
-        return None if certificate_arn else acm_response['CertificateArn']
+        return acm_response['CertificateArn']
 
 
 

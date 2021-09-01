@@ -24,10 +24,43 @@ functions:
   apigw:
     handler: api.lambda_handler
     runtime: python3.9
-    memorySize: "256"
+    memorySize: "128"
+    timeout: 35 # ApiGW has a built-in timeout of 30 sec
+    environment:
+      SFN_ARN:
+        Fn::Join:
+            - ''
+            -
+              - 'arn:aws:states:'
+              - Ref: 'AWS::Region'
+              - ":"
+              - Ref: 'AWS::AccountId'
+              - ':stateMachine:acme-gw-sfn-${opt:stage}'
+    events:
+      - http:
+          path: /get_certificate
+          method: post
+
+      - http:
+          path: /get_certificate_worker
+          method: get
+
+  worker:
+    handler: worker.sfn_get_certificate
+    runtime: python3.9
+    memorySize: "512"
     timeout: 900
     environment:
       XTOKEN: "${{ssm:/timecard/prod/apitoken}}"
+      SFN_ARN:
+        Fn::Join:
+            - ''
+            -
+              - 'arn:aws:states:'
+              - Ref: 'AWS::Region'
+              - ":"
+              - Ref: 'AWS::AccountId'
+              - ':stateMachine:acme-gw-sfn-${opt:stage}'
       S3_BUCKET:
         Fn::Join:
             - '-'
@@ -36,10 +69,7 @@ functions:
               - Ref: 'AWS::Region'
               - Ref: 'AWS::AccountId'
               - 'storage'
-    events:
-      - http:
-          path: /get_certificate
-          method: get
+
 
 resources:
   Description: ACME Gateway
@@ -94,6 +124,18 @@ resources:
                   Resource:
                     - '*'
 
+          - PolicyName: SFNExecution
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - states:StartExecution
+                    - states:StopExecution
+                    - states:ListExecutions
+                  Resource:
+                    - '*'
+
           - PolicyName: Route53
             PolicyDocument:
               Version: '2012-10-17'
@@ -112,7 +154,7 @@ resources:
                   Action:
                     - acm:*
                   Resource:
-                    - '*'                    
+                    - '*'
 
           - PolicyName: CloudwatchLog
             PolicyDocument:
@@ -132,4 +174,78 @@ resources:
                         - Ref: 'AWS::Region'
                         - Ref: 'AWS::AccountId'
                         - 'log-group:/aws/lambda/*:*:*'
+    StatesExecutionRole:
+      Type: "AWS::IAM::Role"
+      Properties:
+        RoleName: "acmw_gw_sfn_${opt:stage}"
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - 'Fn::Join':
+                    - '.'
+                    -
+                      - 'states'
+                      - Ref: 'AWS::Region'
+                      - 'amazonaws.com'
+              Action: "sts:AssumeRole"
+        Path: "/"
+        Policies:
+          - PolicyName: StatesExecutionPolicy
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - "lambda:InvokeFunction"
+                  Resource: "*"
 
+    AcmeWorker:
+      Type: 'AWS::StepFunctions::StateMachine'
+      Properties:
+        RoleArn:
+          Fn::GetAtt: [ StatesExecutionRole, Arn ]
+        StateMachineName: "acme-gw-sfn-${opt:stage}"
+        DefinitionString:
+          Fn::Sub:
+            |-
+              {
+                "Comment": "Acme Worker",
+                "StartAt": "Get certs",
+                "States": {
+                  "Get certs": {
+                    "Type": "Task",
+                    "Resource": "${WorkerLambdaFunction.Arn}",
+                    "InputPath": "$",
+                    "ResultPath": "$",
+                    "TimeoutSeconds": 180,
+                    "Next": "Complete",
+                    "Retry": [
+                      {
+                        "ErrorEquals": ["States.ALL"],
+                        "IntervalSeconds": 3,
+                        "BackoffRate": 2.0,
+                        "MaxAttempts": 2
+                      }
+                    ],
+                    "Catch": [
+                      {
+                        "ErrorEquals": ["States.ALL"],
+                        "ResultPath": "$.errorMsg",
+                        "Next": "Job Failed"
+                      }
+                    ]
+                  },
+                  "Job Failed": {
+                    "Type": "Fail",
+                    "Cause": "Job Failed",
+                    "Error": "$.errorMsg"
+                  },
+                  "Complete": {
+                    "Type": "Pass",
+                    "End": true
+                  }
+                }
+              }
