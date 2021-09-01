@@ -41,13 +41,13 @@ class SFNHelper(object):
 
     
     def invoke_sfn(self, event):
-        uuid = str(uuid.uuid4())
+        _uuid = str(uuid.uuid4())
         self.client.start_execution(
                     stateMachineArn=self.step_function_arn,
-                    name=uuid,
+                    name=_uuid,
                     input=json.dumps(event)
                 )
-        return uuid
+        return _uuid
 
 
 class ACMHelper(object):
