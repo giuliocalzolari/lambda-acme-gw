@@ -61,6 +61,11 @@ resources:
               - Ref: 'AWS::Region'
               - Ref: 'AWS::AccountId'
               - 'storage'
+        PublicAccessBlockConfiguration:
+            BlockPublicAcls : true
+            BlockPublicPolicy : true
+            IgnorePublicAcls : true
+            RestrictPublicBuckets : true
         BucketEncryption:
           ServerSideEncryptionConfiguration:
             - ServerSideEncryptionByDefault:
@@ -86,6 +91,16 @@ resources:
                 - Effect: Allow
                   Action:
                     - s3:*
+                  Resource:
+                    - '*'
+
+          - PolicyName: Route53
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - route53:*
                   Resource:
                     - '*'
 
