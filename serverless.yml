@@ -46,8 +46,8 @@ functions:
           path: /get_certificate_worker
           method: get
 
-  worker:
-    handler: worker.lambda_handler
+  sfn:
+    handler: sfn.lambda_handler
     runtime: python3.9
     memorySize: "512"
     timeout: 900
@@ -79,7 +79,7 @@ resources:
       Properties:
         RetentionInDays: "90"
 
-    WorkerLogGroup:
+    SfnLogGroup:
       Type: AWS::Logs::LogGroup
       Properties:
         RetentionInDays: "90"
@@ -222,7 +222,7 @@ resources:
                 "States": {
                   "Get certs": {
                     "Type": "Task",
-                    "Resource": "${WorkerLambdaFunction.Arn}",
+                    "Resource": "${SfnLambdaFunction.Arn}",
                     "InputPath": "$",
                     "ResultPath": "$",
                     "TimeoutSeconds": 180,
