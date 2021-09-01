@@ -31,11 +31,10 @@ functions:
       XTOKEN: "${{ssm:/timecard/prod/apitoken}}"
       S3_BUCKET:
         Fn::Join:
-            - ''
+            - '-'
             -
               - 'acme'
               - Ref: 'AWS::Region'
-              - "-"
               - Ref: 'AWS::AccountId'
               - 'storage'
     events:
@@ -57,11 +56,10 @@ resources:
       Properties:
         BucketName:
           Fn::Join:
-            - ''
+            - '-'
             -
               - 'acme'
               - Ref: 'AWS::Region'
-              - "-"
               - Ref: 'AWS::AccountId'
               - 'storage'
         BucketEncryption:
@@ -72,7 +70,7 @@ resources:
     LambdaIAMRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: "acme_gw_${{self:provider.stage}}"
+        RoleName: "acme_gw_${opt:stage}"
         AssumeRolePolicyDocument:
           Version: '2012-10-17'
           Statement:
