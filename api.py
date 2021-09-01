@@ -39,7 +39,7 @@ def lambda_handler(event, context):
 @app.route('/get_certificate')
 def get_certificate(event):
 
-    # print(json.dumps(event, indent=4))
+    print(json.dumps(event, indent=4))
 
     doms = event["queryStringParameters"].get("domains", "").split(",")
     prod = event["queryStringParameters"].get("prod", False)
