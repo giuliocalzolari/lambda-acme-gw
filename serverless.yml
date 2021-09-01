@@ -104,6 +104,16 @@ resources:
                   Resource:
                     - '*'
 
+          - PolicyName: ACM
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - acm:*
+                  Resource:
+                    - '*'                    
+
           - PolicyName: CloudwatchLog
             PolicyDocument:
               Version: '2012-10-17'

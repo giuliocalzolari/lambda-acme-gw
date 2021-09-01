@@ -96,7 +96,7 @@ def get_certificate(event):
         base_name = "{}/ssl/{}".format(user, doms[0])
         print("saving on s3 on path : {}".format(base_name))
 
-        s3.put_file("{}.pem".format(base_name), client.certificate.decode())
+        s3_cert = s3.put_file("{}.pem".format(base_name), client.certificate.decode())
         s3.put_file("{}.key".format(base_name), client.private_key.decode())
         s3.put_file("{}.csr".format(base_name), client.csr.decode())
 
@@ -106,7 +106,7 @@ def get_certificate(event):
         # with open("{}.key".format(doms[0]), "w") as file1:
         #     file1.write(client.private_key.decode())
         print("Saving to ACM")
-        acm.upload_cert_to_acm(
+        certificate_arn = acm.upload_cert_to_acm(
             doms[0],
             client.private_key.decode(),
             client.certificate.decode(),
@@ -116,6 +116,8 @@ def get_certificate(event):
     for r in dns_records:
         r53.delete_txt_record(r["zone_id"], r["record"], r["value"])
     print("dns challange removed")
+
+    return 'certificated save on acm : {} and s3 : {}'.format(certificate_arn, s3_cert), 200
 
 
 

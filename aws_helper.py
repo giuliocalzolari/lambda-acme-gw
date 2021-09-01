@@ -19,7 +19,7 @@ class S3Helper(object):
 
     def put_json(self, key, value):
         _json = json.dumps(value,indent=4, default=str)
-        self.put_file(key, _json)
+        return self.put_file(key, _json)
 
     def put_file(self, key, value):
         self.client.put_object(
@@ -27,6 +27,7 @@ class S3Helper(object):
             Bucket=self.bucket,
             Key=key
         )
+        return "s3://{}/{}".format(self.bucket, key)
 
 
 class ACMHelper(object):
