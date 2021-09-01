@@ -26,7 +26,7 @@ jobs:
     - name: install Serverless plugins
       uses: serverless/github-action@master
       with:
-        args: serverless plugin install --name serverless-python-requirements
+        args: plugin install --name serverless-python-requirements
 
     - name: Serverless deploy
       uses: serverless/github-action@master
