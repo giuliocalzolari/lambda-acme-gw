@@ -25,7 +25,7 @@ functions:
     handler: api.lambda_handler
     runtime: python3.9
     memorySize: "128"
-    timeout: 35 # ApiGW has a built-in timeout of 30 sec
+    timeout: 30 # ApiGW has a built-in timeout of 30 sec
     environment:
       XTOKEN: "${{ssm:/timecard/prod/apitoken}}"
       SFN_ARN:

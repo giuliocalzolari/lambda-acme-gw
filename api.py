@@ -41,7 +41,7 @@ def get_certificate(event):
     return {
         "mgs": "execution in progress",
         "id": uuid
-    }
+    }, 202
 
 
 @app.route('/get_certificate_worker')
