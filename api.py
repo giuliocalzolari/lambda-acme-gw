@@ -43,6 +43,7 @@ def get_certificate(event):
 
     doms = event["queryStringParameters"].get("domains", "").split(",")
     prod = event["queryStringParameters"].get("prod", False)
+    output = event["queryStringParameters"].get("output", "acm")
     user = event["queryStringParameters"].get("user", "glenkmurray@armyspy.com")
     session = boto3.Session()
     r53 = Route53ChallengeCompleter(session)
@@ -105,19 +106,26 @@ def get_certificate(event):
 
         # with open("{}.key".format(doms[0]), "w") as file1:
         #     file1.write(client.private_key.decode())
-        print("Saving to ACM")
-        certificate_arn = acm.upload_cert_to_acm(
-            doms[0],
-            client.private_key.decode(),
-            client.certificate.decode(),
-        )
+        if output == "acm":
+            print("Saving to ACM")
+            certificate_arn = acm.upload_cert_to_acm(
+                doms[0],
+                client.private_key.decode(),
+                client.certificate.decode(),
+            )
 
     print("cleaup dns challange")
     for r in dns_records:
         r53.delete_txt_record(r["zone_id"], r["record"], r["value"])
     print("dns challange removed")
 
-    return 'certificated save on acm : {} and s3 : {}'.format(certificate_arn, s3_cert), 200
+    if output == "http":
+        return {
+            "private_key": client.private_key.decode(),
+            "certificate": client.certificate.decode(),
+            "csr": client.csr.decode()
+        }
+    return 'certificated saved on acm : {} and s3 : {}'.format(certificate_arn, s3_cert), 200
 
 
 
