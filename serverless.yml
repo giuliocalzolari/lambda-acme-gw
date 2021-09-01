@@ -47,7 +47,7 @@ functions:
           method: get
 
   worker:
-    handler: worker.sfn_get_certificate
+    handler: worker.lambda_handler
     runtime: python3.9
     memorySize: "512"
     timeout: 900
