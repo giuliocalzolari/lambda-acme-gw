@@ -11,11 +11,15 @@ class S3Helper(object):
         self.client = session.client("s3")
         self.bucket = os.environ.get("S3_BUCKET", s3)
 
-    def get_file_url(self, key):
+
+    def generate_presigned_url(self, key, expiration=3600):
         tmp = key.replace("s3://", "").split("/")
-        self.bucket = tmp[0]
+        bucket_name = tmp[0]
         tmp.pop(0)
-        return self.get_file("/".join(tmp))
+        return self.client.generate_presigned_url('get_object',
+                                                    Params={'Bucket': bucket_name,
+                                                            'Key': "/".join(tmp)},
+                                                    ExpiresIn=expiration)
 
     def get_json(self, key):
         return json.loads(self.get_file(key))

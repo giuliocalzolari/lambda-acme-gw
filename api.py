@@ -73,11 +73,13 @@ def get_certificate(event):
     if rs["status"] != "SUCCEEDED":
         return "execution status : {}".format(rs["status"]), 204
 
-    out = s3.get_file_url(rs["output"]["s3_cert"])
+    out = {
+        "cert": s3.generate_presigned_url(rs["output"]["s3_cert"])
+    }
     if private_key:
-        out += s3.get_file_url(rs["output"]["s3_key"])
+       out["key"] = s3.generate_presigned_url(rs["output"]["s3_key"])
 
     if csr:
-        out += s3.get_file_url(rs["output"]["s3_csr"])
+        out["csr"] = s3.generate_presigned_url(rs["output"]["s3_csr"])
 
     return out , 200
