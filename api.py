@@ -64,11 +64,20 @@ def get_certificate(event):
     s3 = S3Helper(session)
 
     uuid = event.get("queryStringParameters", {}).get("id", None)
+    private_key = bool(event.get("queryStringParameters", {}).get("key", False))
+    csr = bool(event.get("queryStringParameters", {}).get("csr", False))
     if not uuid:
         return "wrong id", 500
 
     rs = sfn.describe_execution(uuid)
-    if rs["status"] == "SUCCEEDED":
-        return s3.get_file_url(rs["output"]["s3_cert"]) , 200
-    else:
+    if rs["status"] != "SUCCEEDED":
         return "execution status : {}".format(rs["status"]), 204
+
+    out = s3.get_file_url(rs["output"]["s3_cert"])
+    if private_key:
+        out += s3.get_file_url(rs["output"]["s3_key"])
+
+    if csr:
+        out += s3.get_file_url(rs["output"]["s3_csr"])
+
+    return out , 200

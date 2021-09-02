@@ -46,6 +46,10 @@ functions:
           path: /get_certificate_worker
           method: get
 
+      - http:
+          path: /download_certificate
+          method: get
+
   sfn:
     handler: sfn.lambda_handler
     runtime: python3.9
