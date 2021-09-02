@@ -138,6 +138,7 @@ resources:
                     - states:StartExecution
                     - states:StopExecution
                     - states:ListExecutions
+                    - states:DescribeExecution
                   Resource:
                     - '*'
 
