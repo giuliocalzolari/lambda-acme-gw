@@ -4,7 +4,7 @@ import json
 import boto3
 import hashlib
 from lambdaroute import router, HTTPException
-from aws_helper import SFNHelper
+from aws_helper import SFNHelper, S3Helper
 app = router()
 
 
@@ -54,5 +54,21 @@ def get_certificate(event):
     if not uuid:
         return "exection id wrong", 500
     else:
-        status = sfn.describe_execution(uuid)
-        return status, 200
+        return sfn.describe_execution(uuid), 200
+
+
+@app.route('/download_certificate')
+def get_certificate(event):
+    session = boto3.Session()
+    sfn = SFNHelper(session)
+    s3 = S3Helper(session)
+
+    uuid = event.get("queryStringParameters", {}).get("id", None)
+    if not uuid:
+        return "wrong id", 500
+
+    rs = sfn.describe_execution(uuid)
+    if rs["status"] == "SUCCEEDED":
+        return s3.get_file_url(rs["output"]["s3_cert"]) , 200
+    else:
+        return "execution status : {}".format(rs["status"]), 204

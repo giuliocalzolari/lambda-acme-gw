@@ -11,12 +11,14 @@ class S3Helper(object):
         self.client = session.client("s3")
         self.bucket = os.environ.get("S3_BUCKET", s3)
 
+    def get_file_url(self, key):
+        tmp = key.replace("s3://", "").split("/")
+        self.bucket = tmp[0]
+        tmp.pop(0)
+        return self.get_file("/".join(tmp))
+
     def get_json(self, key):
-        try:
-            obj = self.client.get_object(Bucket=self.bucket, Key=key)
-            return json.loads(obj['Body'].read())
-        except self.client.exceptions.NoSuchKey:
-            return {}
+        return json.loads(self.get_file(key))
 
     def put_json(self, key, value):
         _json = json.dumps(value,indent=4, default=str)
@@ -29,6 +31,13 @@ class S3Helper(object):
             Key=key
         )
         return "s3://{}/{}".format(self.bucket, key)
+
+    def get_file(self, key):
+        try:
+            obj = self.client.get_object(Bucket=self.bucket, Key=key)
+            return obj['Body'].read()
+        except self.client.exceptions.NoSuchKey:
+            return ""
 
 
 
