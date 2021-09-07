@@ -9,7 +9,7 @@ app = router()
 
 
 def lambda_handler(event, context):
-    print(json.dumps(event, indent=4))
+    # print(json.dumps(event, indent=4))
     h = event["headers"]
     if "x-token" not in h:
         return  {

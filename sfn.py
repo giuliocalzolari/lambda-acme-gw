@@ -95,7 +95,6 @@ def lambda_handler(argv, context=None):
             if ext.get_short_name() == b'subjectAltName':
                 domain_certs = ext.__str__().replace(", ", "").split("DNS:")
                 domain_certs.pop(0)
-                print(domain_certs)
 
         if set(domain_certs) != set(doms):
             msg = "SAN names mismatch... better to renew"

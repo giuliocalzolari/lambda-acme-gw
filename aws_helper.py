@@ -69,7 +69,7 @@ class SFNHelper(object):
                 )
         return {
             "status": response["status"],
-            "output": json.loads(response.get("output", "")),
+            "output": json.loads(response.get("output", "{}")),
         }
 
 
