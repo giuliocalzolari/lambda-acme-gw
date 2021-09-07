@@ -70,7 +70,7 @@ def acme_process(doms, user, prod):
     return s3_cert, s3_key, s3_csr, client.certificate.decode(), client.private_key.decode()
 
 
-def lambda_handler(argv):
+def lambda_handler(argv, context=None):
     doms = argv.get("domains", "").split(",")
     prod = argv.get("prod", False)
     output = argv.get("output", "acm")
