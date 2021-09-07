@@ -75,10 +75,10 @@ def lambda_handler(argv, context=None):
     prod = argv.get("prod", False)
     output = argv.get("output", "acm")
     user = argv.get("user", "glenkmurray@armyspy.com")
-
-
     base_name = "{}/ssl/{}".format(user, doms[0])
+    print(f"base name: {base_name}")
     s3_cert = s3.get_file("{}.pem".format(base_name))
+    print(f"s3_cert: {s3_cert}")
     cert = crypto.load_certificate(crypto.FILETYPE_PEM, s3_cert)
     not_after = datetime.strptime(cert.get_notAfter().decode("ascii"), "%Y%m%d%H%M%SZ")
     now = datetime.now()
