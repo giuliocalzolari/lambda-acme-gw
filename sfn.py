@@ -117,10 +117,10 @@ def lambda_handler(argv, context=None):
     }
 
     if output == "acm":
-            print("Saving to ACM")
-            response["acm"] = acm.upload_cert_to_acm(
-                doms[0],
-                key_body,
-                cert_body,
-            )
+        print("Saving to ACM")
+        response["acm"] = acm.upload_cert_to_acm(
+            doms[0],
+            key_body,
+            cert_body,
+        )
     return response

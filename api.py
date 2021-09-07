@@ -37,7 +37,7 @@ def get_certificate(event):
     session = boto3.Session()
     sfn = SFNHelper(session)
     argv = {
-        "doms": event["queryStringParameters"].get("domains", ""),
+        "domains": event["queryStringParameters"].get("domains", ""),
         "prod": event["queryStringParameters"].get("prod", False),
         "output": event["queryStringParameters"].get("output", "acm"),
         "user": event["queryStringParameters"].get("user", "glenkmurray@armyspy.com"),
