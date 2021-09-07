@@ -77,9 +77,8 @@ def lambda_handler(argv, context=None):
     user = argv.get("user", "glenkmurray@armyspy.com")
     base_name = "{}/ssl/{}".format(user, doms[0])
     print(f"base name: {base_name}")
-    s3_cert = s3.get_file("{}.pem".format(base_name))
-    print(f"s3_cert: {s3_cert}")
-    cert = crypto.load_certificate(crypto.FILETYPE_PEM, s3_cert)
+    cert_body = s3.get_file("{}.pem".format(base_name))
+    cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert_body)
     not_after = datetime.strptime(cert.get_notAfter().decode("ascii"), "%Y%m%d%H%M%SZ")
     now = datetime.now()
 
@@ -103,8 +102,10 @@ def lambda_handler(argv, context=None):
         else:
             acme_api = False
             msg = "Cert on S3 is valid and not expired"
-            s3_key = s3.get_file("{}.key".format(base_name))
-            s3_csr = s3.get_file("{}.csr".format(base_name))
+            key_body = s3.get_file("{}.key".format(base_name))
+            s3_cert = "s3://{}/{}".format(s3.bucket, "{}.pem".format(base_name))
+            s3_key = "s3://{}/{}".format(s3.bucket, "{}.key".format(base_name))
+            s3_csr = "s3://{}/{}".format(s3.bucket, "{}.csr".format(base_name))
     print(msg)
 
     if acme_api:
