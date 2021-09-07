@@ -39,7 +39,7 @@ class S3Helper(object):
     def get_file(self, key):
         try:
             obj = self.client.get_object(Bucket=self.bucket, Key=key)
-            return obj['Body'].read()
+            return obj['Body'].read().decode()
         except self.client.exceptions.NoSuchKey:
             return ""
 
