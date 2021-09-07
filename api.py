@@ -36,8 +36,13 @@ def lambda_handler(event, context):
 def get_certificate(event):
     session = boto3.Session()
     sfn = SFNHelper(session)
-
-    uuid = sfn.invoke_sfn(event)
+    argv = {
+        "doms": event["queryStringParameters"].get("domains", ""),
+        "prod": event["queryStringParameters"].get("prod", False),
+        "output": event["queryStringParameters"].get("output", "acm"),
+        "user": event["queryStringParameters"].get("user", "glenkmurray@armyspy.com"),
+    }
+    uuid = sfn.invoke_sfn(argv)
     return {
         "msg": "execution in progress",
         "id": uuid
