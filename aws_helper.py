@@ -61,6 +61,18 @@ class SFNHelper(object):
                 )
         return _uuid
 
+    def invoke_sfn_renew(self, event):
+        _uuid = str(uuid.uuid4())
+        seconds_in_day = 86400
+        event["wait"] = 86 * seconds_in_day
+        self.client.start_execution(
+                    stateMachineArn=self.step_function_arn.replace("gw","renew"),
+                    name=f"renew-{_uuid}",
+                    input=json.dumps(event)
+                )
+        return _uuid
+
+
     def describe_execution(self, uuid):
         execution_arn = self.step_function_arn.replace("stateMachine", "execution")
         response = self.client.describe_execution(

@@ -40,6 +40,7 @@ def get_certificate(event):
         "domains": event["queryStringParameters"].get("domains", ""),
         "user": event["queryStringParameters"].get("user", "glenkmurray@armyspy.com"),
     }
+    print(f"User: {argv['user']} requested cert for {argv['domains']}")
     uuid = sfn.invoke_sfn(argv)
     out = {
         "msg": "execution in progress",
@@ -48,9 +49,7 @@ def get_certificate(event):
 
     if event["queryStringParameters"].get("autorenew", False):
         print("trigger auto-renew process")
-        sfn.step_function_arn = sfn.step_function_arn.replace("gw","renew")
-        argv["wait"] = 500
-        out["renew_uuid"] = sfn.invoke_sfn(argv, "renew-")
+        out["renew_uuid"] = sfn.invoke_sfn_renew(argv, "renew-")
 
     return out, 202
 

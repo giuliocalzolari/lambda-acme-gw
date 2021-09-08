@@ -5,7 +5,7 @@ import boto3
 from OpenSSL import crypto
 from datetime import datetime, timedelta
 import simple_acme_dns
-from aws_helper import Route53ChallengeCompleter, S3Helper, ACMHelper
+from aws_helper import Route53ChallengeCompleter, S3Helper, ACMHelper, SFNHelper
 
 DIRECTORY_STAGE_URL = 'https://acme-staging-v02.api.letsencrypt.org/directory'
 DIRECTORY_URL = "https://acme-v02.api.letsencrypt.org/directory"
@@ -14,6 +14,7 @@ session = boto3.Session()
 r53 = Route53ChallengeCompleter(session)
 s3 = S3Helper(session)
 acm = ACMHelper(session)
+sfn = SFNHelper(session)
 
 def acme_process(doms, user):
     base_name = "{}/ssl/{}".format(user, doms[0])
@@ -56,7 +57,7 @@ def acme_process(doms, user):
     r53.wait_for_bulk_changes()
 
     if client.check_dns_propagation(timeout=60, interval=1):
-        print("Requesting ACME certificate")
+        print(f"Requesting ACME certificate for {doms}")
         client.request_certificate()
         print("Saving on s3 on path : {}".format(base_name))
         s3_cert = s3.put_file("{}.pem".format(base_name), client.certificate.decode())
