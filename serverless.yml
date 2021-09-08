@@ -65,7 +65,7 @@ functions:
               - ":"
               - Ref: 'AWS::AccountId'
               - ':stateMachine:acme-gw-sfn-${opt:stage}'
-      S3_BUCKET: 
+      S3_BUCKET:
         Ref: 'S3Bucket'
 
 
@@ -134,7 +134,12 @@ resources:
                     - s3:GetObject
                     - s3:GetBucketLocation
                   Resource:
-                    Fn::GetAtt: [ S3Bucket, Arn ]
+                    Fn::Join:
+                      - ''
+                      -
+                        - Fn::GetAtt: [ S3Bucket, Arn ]
+                        - '/*'
+                    
 
           - PolicyName: SFN
             PolicyDocument:
