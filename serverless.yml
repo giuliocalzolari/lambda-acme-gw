@@ -133,7 +133,7 @@ resources:
                   Resource:
                     - '*'
 
-          - PolicyName: SFNExecution
+          - PolicyName: SFN
             PolicyDocument:
               Version: '2012-10-17'
               Statement:
@@ -162,7 +162,9 @@ resources:
               Statement:
                 - Effect: Allow
                   Action:
-                    - acm:*
+                    - acm:DescribeCertificate
+                    - acm:ListCertificates
+                    - acm:ImportCertificate
                   Resource:
                     - '*'
 
@@ -187,7 +189,7 @@ resources:
     StatesExecutionRole:
       Type: "AWS::IAM::Role"
       Properties:
-        RoleName: "acmw_gw_sfn_${opt:stage}"
+        RoleName: "acme_gw_sfn_${opt:stage}"
         AssumeRolePolicyDocument:
           Version: "2012-10-17"
           Statement:

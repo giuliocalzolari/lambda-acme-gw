@@ -75,7 +75,10 @@ def lambda_handler(argv, context=None):
     prod = argv.get("prod", False)
     user = argv.get("user", "glenkmurray@armyspy.com")
     base_name = "{}/ssl/{}".format(user, doms[0])
-    print(f"base name: {base_name}")
+    if not argv.get("wait", None):
+        print(f"Auto Renew process for {base_name}")
+    else:
+        print(f"Standard request: {base_name}")
     cert_body = s3.get_file("{}.pem".format(base_name))
     cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert_body)
     not_after = datetime.strptime(cert.get_notAfter().decode("ascii"), "%Y%m%d%H%M%SZ")
