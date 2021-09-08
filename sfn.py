@@ -73,7 +73,6 @@ def acme_process(doms, user, prod):
 def lambda_handler(argv, context=None):
     doms = argv.get("domains", "").split(",")
     prod = argv.get("prod", False)
-    output = argv.get("output", "acm")
     user = argv.get("user", "glenkmurray@armyspy.com")
     base_name = "{}/ssl/{}".format(user, doms[0])
     print(f"base name: {base_name}")
@@ -115,12 +114,10 @@ def lambda_handler(argv, context=None):
         "s3_key": s3_key,
         "s3_csr": s3_csr,
     }
-
-    if output == "acm":
-        print("Saving to ACM")
-        response["acm"] = acm.upload_cert_to_acm(
-            doms[0],
-            key_body,
-            cert_body,
-        )
+    print("Saving to ACM")
+    response["acm"] = acm.upload_cert_to_acm(
+        doms[0],
+        key_body,
+        cert_body,
+    )
     return response

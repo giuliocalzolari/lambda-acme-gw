@@ -52,12 +52,11 @@ class SFNHelper(object):
         if not self.step_function_arn:
             raise Exception("[SFN_ARN] OS variable is not set")
 
-    
-    def invoke_sfn(self, event):
+    def invoke_sfn(self, event, prefix = ""):
         _uuid = str(uuid.uuid4())
         self.client.start_execution(
                     stateMachineArn=self.step_function_arn,
-                    name=_uuid,
+                    name=f"{prefix}{_uuid}",
                     input=json.dumps(event)
                 )
         return _uuid

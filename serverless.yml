@@ -259,3 +259,55 @@ resources:
                   }
                 }
               }
+    AcmeRenew:
+      Type: 'AWS::StepFunctions::StateMachine'
+      Properties:
+        RoleArn:
+          Fn::GetAtt: [ StatesExecutionRole, Arn ]
+        StateMachineName: "acme-renew-sfn-${opt:stage}"
+        DefinitionString:
+          Fn::Sub:
+            |-
+              {
+                "Comment": "Acme Renew cets",
+                "StartAt": "Wait",
+                "States": {
+                  "Wait": {
+                    "Type": "Wait",
+                    "SecondsPath": "$.wait",
+                    "Next": "Renew cert"
+                  },
+                  "Renew cert": {
+                    "Type": "Task",
+                    "Resource": "${SfnLambdaFunction.Arn}",
+                    "InputPath": "$",
+                    "ResultPath": "$",
+                    "TimeoutSeconds": 180,
+                    "Next": "Complete",
+                    "Retry": [
+                      {
+                        "ErrorEquals": ["States.ALL"],
+                        "IntervalSeconds": 3,
+                        "BackoffRate": 2.0,
+                        "MaxAttempts": 2
+                      }
+                    ],
+                    "Catch": [
+                      {
+                        "ErrorEquals": ["States.ALL"],
+                        "ResultPath": "$.errorMsg",
+                        "Next": "Job Failed"
+                      }
+                    ]
+                  },
+                  "Job Failed": {
+                    "Type": "Fail",
+                    "Cause": "Job Failed",
+                    "Error": "$.errorMsg"
+                  },
+                  "Complete": {
+                    "Type": "Pass",
+                    "End": true
+                  }
+                }
+              }

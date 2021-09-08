@@ -39,14 +39,21 @@ def get_certificate(event):
     argv = {
         "domains": event["queryStringParameters"].get("domains", ""),
         "prod": event["queryStringParameters"].get("prod", False),
-        "output": event["queryStringParameters"].get("output", "acm"),
         "user": event["queryStringParameters"].get("user", "glenkmurray@armyspy.com"),
     }
     uuid = sfn.invoke_sfn(argv)
-    return {
+    out = {
         "msg": "execution in progress",
         "id": uuid
-    }, 202
+    }
+
+    if event["queryStringParameters"].get("autorenew", False):
+        print("trigger auto-renew process")
+        sfn.step_function_arn = sfn.step_function_arn.replace("gw","renew")
+        argv["wait"] = 500
+        out["renew_uuid"] = sfn.invoke_sfn(argv, "renew-")
+
+    return out, 202
 
 
 @app.route('/get_certificate_worker')
