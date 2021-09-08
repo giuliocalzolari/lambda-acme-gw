@@ -38,7 +38,6 @@ def get_certificate(event):
     sfn = SFNHelper(session)
     argv = {
         "domains": event["queryStringParameters"].get("domains", ""),
-        "prod": event["queryStringParameters"].get("prod", False),
         "user": event["queryStringParameters"].get("user", "glenkmurray@armyspy.com"),
     }
     uuid = sfn.invoke_sfn(argv)

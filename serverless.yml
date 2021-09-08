@@ -53,9 +53,11 @@ functions:
   sfn:
     handler: sfn.lambda_handler
     runtime: python3.9
-    memorySize: "512"
+    memorySize: "256"
     timeout: 900
     environment:
+      DIRECTORY_URL: 'https://acme-staging-v02.api.letsencrypt.org/directory'
+      # DIRECTORY_URL: "https://acme-v02.api.letsencrypt.org/directory"
       SFN_ARN:
         Fn::Join:
             - ''
@@ -139,7 +141,6 @@ resources:
                       -
                         - Fn::GetAtt: [ S3Bucket, Arn ]
                         - '/*'
-                    
 
           - PolicyName: SFN
             PolicyDocument:

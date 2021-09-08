@@ -250,10 +250,10 @@ class Route53ChallengeCompleter(object):
 
     def wait_for_bulk_changes(self):
         while True:
-            print(self.change_ids)
+            # print(self.change_ids)
             for change_id in self.change_ids:
                 response = self.route53_client.get_change(Id=change_id)
-                print(response["ChangeInfo"]["Status"])
+                # print(response["ChangeInfo"]["Status"])
                 if response["ChangeInfo"]["Status"] == "INSYNC":
                     self.change_ids.remove(change_id)
                 time.sleep(1)

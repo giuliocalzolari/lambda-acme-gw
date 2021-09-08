@@ -9,17 +9,18 @@ from aws_helper import Route53ChallengeCompleter, S3Helper, ACMHelper
 
 DIRECTORY_STAGE_URL = 'https://acme-staging-v02.api.letsencrypt.org/directory'
 DIRECTORY_URL = "https://acme-v02.api.letsencrypt.org/directory"
+
 session = boto3.Session()
 r53 = Route53ChallengeCompleter(session)
 s3 = S3Helper(session)
 acm = ACMHelper(session)
 
-def acme_process(doms, user, prod):
+def acme_process(doms, user):
     base_name = "{}/ssl/{}".format(user, doms[0])
     client = simple_acme_dns.ACMEClient(
             domains=doms,
             email=user,
-            directory= DIRECTORY_URL if prod else DIRECTORY_STAGE_URL,
+            directory=os.environ.get("DIRECTORY_URL", DIRECTORY_STAGE_URL),
             nameservers=["8.8.8.8", "1.1.1.1"],    # Set the nameservers to query when checking DNS propagation
             generate_csr=False,    # Generate a new private key and CSR upon creation of our object
             new_account=False,
@@ -28,11 +29,11 @@ def acme_process(doms, user, prod):
     cfg_file = "{}/cfg.json".format(user)
     cfg = s3.get_json(cfg_file)
     if cfg != {}:
-        print("re-using old registration")
+        print("Re-using old registration")
         client = simple_acme_dns.ACMEClient.load_account(cfg)
         client.generate_csr()
     else:
-        print("creating new account")
+        print("Creating new account")
         client.new_account()
         client.generate_private_key_and_csr("rsa2048")
         cfg = client.export_account(
@@ -51,31 +52,30 @@ def acme_process(doms, user, prod):
             "value": token,
         })
         r53._change_txt_record("UPSERT", zone_id, domain, token)
-    print("waiting propagation")
+    print("Waiting Route53 propagation")
     r53.wait_for_bulk_changes()
 
     if client.check_dns_propagation(timeout=60, interval=1):
-        print("requesting certificate")
+        print("Requesting ACME certificate")
         client.request_certificate()
-        print("saving on s3 on path : {}".format(base_name))
+        print("Saving on s3 on path : {}".format(base_name))
         s3_cert = s3.put_file("{}.pem".format(base_name), client.certificate.decode())
         s3_key = s3.put_file("{}.key".format(base_name), client.private_key.decode())
         s3_csr = s3.put_file("{}.csr".format(base_name), client.csr.decode())
 
-    print("cleaup dns challange")
+    print("Cleaup dns challange")
     for r in dns_records:
         r53.delete_txt_record(r["zone_id"], r["record"], r["value"])
-    print("dns challange removed")
+    print("DNS challange removed")
 
     return s3_cert, s3_key, s3_csr, client.certificate.decode(), client.private_key.decode()
 
 
 def lambda_handler(argv, context=None):
     doms = argv.get("domains", "").split(",")
-    prod = argv.get("prod", False)
     user = argv.get("user", "glenkmurray@armyspy.com")
     base_name = "{}/ssl/{}".format(user, doms[0])
-    if not argv.get("wait", None):
+    if "wait" in argv:
         print(f"Auto Renew process for {base_name}")
     else:
         print(f"Standard request: {base_name}")
@@ -110,7 +110,7 @@ def lambda_handler(argv, context=None):
     print(msg)
 
     if acme_api:
-        s3_cert, s3_key, s3_csr, cert_body, key_body = acme_process(doms, user, prod)
+        s3_cert, s3_key, s3_csr, cert_body, key_body = acme_process(doms, user)
 
     response = {
         "s3_cert": s3_cert,
