@@ -9,6 +9,8 @@ from aws_helper import SFNHelper, S3Helper, ApigwHelper
 app = router()
 api = ApigwHelper()
 
+def pprint(r):
+    print(json.dumps(r,indent=4, default=str))
 
 def lambda_handler(event, context):
     rs = api.validate(event)
@@ -18,6 +20,10 @@ def lambda_handler(event, context):
 
 @app.route('/get_certificate')
 def get_certificate(event):
+    print("api.event")
+    pprint(api.event)
+    print("event")
+    pprint(event)
     domains = api.read_input("domains")
     if not domains:
         return {
