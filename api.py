@@ -9,7 +9,9 @@ app = router()
 
 
 def lambda_handler(event, context):
-    print(json.dumps(event, indent=4))
+    if os.environ.get("DEBUG", "none") == "enable":
+        print(json.dumps(event, indent=4))
+
     h = event["headers"]
     if "x-token" not in h:
         return  {
@@ -49,7 +51,7 @@ def get_certificate(event):
 
     if event["queryStringParameters"].get("autorenew", False):
         print("trigger auto-renew process")
-        out["renew_uuid"] = sfn.invoke_sfn_renew(argv, "renew-")
+        out["renew_uuid"] = sfn.invoke_sfn_renew(argv)
 
     return out, 202
 
