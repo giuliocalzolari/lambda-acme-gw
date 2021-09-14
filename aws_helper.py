@@ -40,10 +40,12 @@ class ApigwHelper(object):
         return self.event
 
     def read_input(self, key):
-        _in = self.event.get("queryStringParameters", {}).get(key, None)
-        if not _in:
-            _in = json.load(self.event.get("body", {}),).get(key, None)
-        return _in
+        if self.event.get("queryStringParameters", None) is not None:
+            return self.event.get("queryStringParameters", {}).get(key, None)
+
+        if self.event.get("body", None) is not None:
+            return json.loads(self.event.get("body", {})).get(key, None)
+        return False
 
     def valid_uuid(self, uuid):
         regex = re.compile('^[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}\Z', re.I)
