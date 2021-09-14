@@ -1,46 +1,41 @@
 import sys
+import re
 import os
 import json
 import boto3
 import hashlib
 from lambdaroute import router, HTTPException
-from aws_helper import SFNHelper, S3Helper
+from aws_helper import SFNHelper, S3Helper, ApigwHelper
 app = router()
+api = ApigwHelper()
 
 
 def lambda_handler(event, context):
-    if os.environ.get("DEBUG", "none") == "enable":
-        print(json.dumps(event, indent=4))
-
-    h = event["headers"]
-    if "x-token" not in h:
-        return  {
-            "statusCode": 500,
-            "body": 'X-Token is missing'
-        }
-    elif ":" not in h["x-token"]:
-        return  {
-            "statusCode": 500,
-            "body": 'X-Token incorrect'
-        }
-
-    user, passwd = h["x-token"].split(":")
-    tk = "{}{}".format(user, os.environ.get("XTOKEN", "xxx")).encode()
-    if passwd != hashlib.md5(tk).hexdigest():
-        return  {
-            "statusCode": 403,
-            "body": 'x-token wrong'
-        }
-    event["x-user"] = user
-    return app.serve(event.get('resource'), event)
+    rs = api.validate(event)
+    if api.error:
+        return rs
+    return app.serve(event.get('resource'), api.event)
 
 @app.route('/get_certificate')
 def get_certificate(event):
+    domains = api.read_input("domains")
+    if not domains:
+        return {
+            "msg": "domains argv not provided",
+        }, 400
+
+    user = api.read_input("user")
+    regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+    if not re.fullmatch(regex, user):
+        return {
+            "msg": "user argv not provided or incorrect",
+        }, 400
+
     session = boto3.Session()
     sfn = SFNHelper(session)
     argv = {
-        "domains": event["queryStringParameters"].get("domains", ""),
-        "user": event["queryStringParameters"].get("user", "glenkmurray@armyspy.com"),
+        "domains": domains,
+        "user": user,
     }
     print(f"User: {argv['user']} requested cert for {argv['domains']}")
     uuid = sfn.invoke_sfn(argv)

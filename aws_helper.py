@@ -4,6 +4,46 @@ import boto3
 import os
 import json
 import uuid
+import hashlib
+
+class ApigwHelper(object):
+    def __init__(self, event):
+        self.error = True
+
+    def validate(self, event):
+        self.event = event
+        if os.environ.get("DEBUG", "none") == "enable":
+            print(json.dumps(event, indent=4))
+
+        h = self.event["headers"]
+        if "x-token" not in h:
+            return  {
+                "statusCode": 500,
+                "body": 'X-Token is missing'
+            }
+        elif ":" not in h["x-token"]:
+            return  {
+                "statusCode": 500,
+                "body": 'X-Token incorrect'
+            }
+
+        user, passwd = h["x-token"].split(":")
+        tk = "{}{}".format(user, os.environ.get("XTOKEN", "xxx")).encode()
+        if passwd != hashlib.md5(tk).hexdigest():
+            return  {
+                "statusCode": 403,
+                "body": 'x-token wrong'
+            }
+        self.error = False
+        self.event["x-user"] = user
+        return self.event
+
+    def read_input(self, key):
+        _in = self.event.get("queryStringParameters", {}).get(key, None)
+        if not _in:
+            _in = json.load(self.event.get("body", {}),).get(key, None)
+        return _in
+
 
 
 class S3Helper(object):
