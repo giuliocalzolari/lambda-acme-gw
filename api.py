@@ -6,17 +6,14 @@ from aws_helper import SFNHelper, S3Helper, ApigwHelper
 app = router()
 api = ApigwHelper()
 
-def pprint(r):
-    print(json.dumps(r,indent=4, default=str))
-
 def lambda_handler(event, context):
     rs = api.validate(event)
     if api.error:
         return rs
-    return app.serve(event.get('resource'))
+    return app.serve(event.get('resource'), api.event)
 
 @app.route('/get_certificate')
-def get_certificate():
+def get_certificate(event):
     domains = api.read_input("domains")
     if not domains:
         return {
@@ -50,7 +47,7 @@ def get_certificate():
 
 
 @app.route('/get_certificate_worker')
-def get_certificate():
+def get_certificate(event):
     session = boto3.Session()
     sfn = SFNHelper(session)
 
@@ -64,7 +61,7 @@ def get_certificate():
 
 
 @app.route('/download_certificate')
-def get_certificate():
+def get_certificate(event):
     session = boto3.Session()
     sfn = SFNHelper(session)
     s3 = S3Helper(session)

@@ -37,7 +37,7 @@ class router():
 
         return decorator
 
-    def serve(self, path, event):
+    def serve(self, path, event=None):
         try:
             first_branch_path = '/'.join(path.split('/')[:2])
             view_function = self.routes[first_branch_path]
