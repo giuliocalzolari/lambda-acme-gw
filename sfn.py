@@ -32,6 +32,7 @@ def acme_process(doms, user):
     if cfg != {}:
         print("Re-using old registration")
         client = simple_acme_dns.ACMEClient.load_account(cfg)
+        client.domains = doms
         client.generate_csr()
     else:
         print("Creating new account")
