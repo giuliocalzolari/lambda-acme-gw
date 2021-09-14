@@ -25,8 +25,7 @@ def get_certificate(event):
         }, 400
 
     user = api.read_input("user")
-    regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
-    if not re.fullmatch(regex, user):
+    if not api.valid_email(user):
         return {
             "msg": "user argv not provided or incorrect",
         }, 400
@@ -44,7 +43,7 @@ def get_certificate(event):
         "id": uuid
     }
 
-    if event["queryStringParameters"].get("autorenew", False):
+    if bool(api.read_input("autorenew")):
         print("trigger auto-renew process")
         out["renew_uuid"] = sfn.invoke_sfn_renew(argv)
 
@@ -53,15 +52,14 @@ def get_certificate(event):
 
 @app.route('/get_certificate_worker')
 def get_certificate(event):
-    # print(json.dumps(event, indent=4))
     session = boto3.Session()
     sfn = SFNHelper(session)
 
-    uuid = event.get("queryStringParameters", {}).get("id", None)
-    if not uuid:
+    uuid = api.read_input("id")
+    if not api.valid_uuid(uuid):
         return "exection id wrong", 500
-    else:
-        return sfn.describe_execution(uuid), 200
+
+    return sfn.describe_execution(uuid), 200
 
 
 @app.route('/download_certificate')
@@ -70,10 +68,11 @@ def get_certificate(event):
     sfn = SFNHelper(session)
     s3 = S3Helper(session)
 
-    uuid = event.get("queryStringParameters", {}).get("id", None)
-    private_key = bool(event.get("queryStringParameters", {}).get("key", False))
-    csr = bool(event.get("queryStringParameters", {}).get("csr", False))
-    if not uuid:
+    uuid = api.read_input("id")
+    private_key = bool(api.read_input("key"))
+    csr = bool(api.read_input("csr"))
+
+    if not api.valid_uuid(uuid):
         return "wrong id", 500
 
     rs = sfn.describe_execution(uuid)
