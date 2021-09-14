@@ -44,7 +44,7 @@ class ApigwHelper(object):
             return self.event.get("queryStringParameters", {}).get(key, None)
 
         if self.event.get("body", None) is not None:
-            return json.loads(self.event.get("body", {})).get(key, None)
+            return self.event.get("body", {}).get(key, None)
         return False
 
     def valid_uuid(self, uuid):

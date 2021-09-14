@@ -1,10 +1,7 @@
 import sys
-import re
-import os
 import json
 import boto3
-import hashlib
-from lambdaroute import router, HTTPException
+from lambdaroute import router
 from aws_helper import SFNHelper, S3Helper, ApigwHelper
 app = router()
 api = ApigwHelper()
@@ -16,14 +13,10 @@ def lambda_handler(event, context):
     rs = api.validate(event)
     if api.error:
         return rs
-    return app.serve(event.get('resource'), api.event)
+    return app.serve(event.get('resource'))
 
 @app.route('/get_certificate')
-def get_certificate(event):
-    print("api.event")
-    pprint(api.event)
-    print("event")
-    pprint(event)
+def get_certificate():
     domains = api.read_input("domains")
     if not domains:
         return {
@@ -57,19 +50,21 @@ def get_certificate(event):
 
 
 @app.route('/get_certificate_worker')
-def get_certificate(event):
+def get_certificate():
     session = boto3.Session()
     sfn = SFNHelper(session)
 
     uuid = api.read_input("id")
     if not api.valid_uuid(uuid):
-        return "exection id wrong", 500
+        return {
+            "msg": "exection id not provided or incorrect",
+        }, 500
 
     return sfn.describe_execution(uuid), 200
 
 
 @app.route('/download_certificate')
-def get_certificate(event):
+def get_certificate():
     session = boto3.Session()
     sfn = SFNHelper(session)
     s3 = S3Helper(session)
@@ -79,7 +74,9 @@ def get_certificate(event):
     csr = bool(api.read_input("csr"))
 
     if not api.valid_uuid(uuid):
-        return "wrong id", 500
+        return {
+            "msg": "exection id not provided or incorrect",
+        }, 500
 
     rs = sfn.describe_execution(uuid)
     if rs["status"] != "SUCCEEDED":

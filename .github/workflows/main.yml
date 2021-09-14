@@ -53,6 +53,7 @@ jobs:
       env:
         SLACK_CHANNEL: github
         SLACK_COLOR: ${{ job.status }} # or a specific color like 'good' or '#ff00ff'
+        SLACK_ICON: https://github.githubassets.com/favicon.ico
         SLACK_MESSAGE: 'ACME GW Deployment ${{ job.status }}'
         SLACK_TITLE: ACME GW
         SLACK_USERNAME: github-action
