@@ -8,7 +8,7 @@ import uuid
 import hashlib
 
 class ApigwHelper(object):
-    def __init__(self, event):
+    def __init__(self):
         self.error = True
 
     def validate(self, event):
