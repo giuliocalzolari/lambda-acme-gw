@@ -37,7 +37,7 @@ def acme_process(doms, user):
     else:
         print("Creating new account")
         client.new_account()
-        client.generate_private_key_and_csr("rsa2048")
+        client.generate_private_key_and_csr()
         cfg = client.export_account(
             save_certificate=True,
             save_private_key=True,
