@@ -73,7 +73,10 @@ class S3Helper(object):
                                                     ExpiresIn=expiration)
 
     def get_json(self, key):
-        return json.loads(self.get_file(key))
+        try:
+            return json.loads(self.get_file(key))
+        except json.decoder.JSONDecodeError as e:
+            return ""
 
     def put_json(self, key, value):
         _json = json.dumps(value,indent=4, default=str)
