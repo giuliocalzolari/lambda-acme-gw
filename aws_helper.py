@@ -140,16 +140,23 @@ class SFNHelper(object):
 
 
 class ACMHelper(object):
-    def __init__(self, domain=None):
+    def __init__(self):
         self.client = boto3.client("acm")
 
     def find_existing_cert(self, domain):
         paginator = self.client.get_paginator('list_certificates')
-        iterator = paginator.paginate(PaginationConfig={'MaxItems':1000})
+        iterator = paginator.paginate(
+            CertificateStatuses=['ISSUED'],
+            Includes={
+                'keyTypes': [
+                    'RSA_1024','RSA_2048','RSA_3072','RSA_4096','EC_prime256v1','EC_secp384r1','EC_secp521r1'
+                ]
+            },
+            PaginationConfig={'MaxItems':1000}
+        )
         for page in iterator:
             for cert in page['CertificateSummaryList']:
                 cert = self.client.describe_certificate(CertificateArn=cert['CertificateArn'])
-                # print(cert['Certificate'])
                 if domain in cert['Certificate']['SubjectAlternativeNames']:
                     return cert
 
