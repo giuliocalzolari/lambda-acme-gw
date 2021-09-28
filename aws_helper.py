@@ -58,8 +58,8 @@ class ApigwHelper(object):
 
 
 class S3Helper(object):
-    def __init__(self, session, s3=None):
-        self.client = session.client("s3")
+    def __init__(self, s3=None):
+        self.client = boto3.client("s3")
         self.bucket = os.environ.get("S3_BUCKET", s3)
 
 
@@ -97,8 +97,8 @@ class S3Helper(object):
 
 
 class SFNHelper(object):
-    def __init__(self, session, s3=None):
-        self.client = session.client("stepfunctions")
+    def __init__(self, s3=None):
+        self.client = boto3.client("stepfunctions")
         self.step_function_arn = os.environ.get("SFN_ARN", s3)
         if not self.step_function_arn:
             raise Exception("[SFN_ARN] OS variable is not set")
@@ -137,8 +137,8 @@ class SFNHelper(object):
 
 
 class ACMHelper(object):
-    def __init__(self, session, domain=None):
-        self.client = session.client("acm")
+    def __init__(self, domain=None):
+        self.client = boto3.client("acm")
 
     def find_existing_cert(self, domain):
         paginator = self.client.get_paginator('list_certificates')
@@ -188,8 +188,8 @@ class ACMHelper(object):
 
 
 class SSMHelper(object):
-    def __init__(self, session, key_id=None, prefix = "/acme"):
-        self.client = session.client("ssm")
+    def __init__(self, key_id=None, prefix = "/acme"):
+        self.client = boto3.client("ssm")
         self.key_id = os.environ.get("SSM_KMS_ID", key_id)
         self.prefix = prefix
 
@@ -228,8 +228,8 @@ class SSMHelper(object):
 
 
 class Route53ChallengeCompleter(object):
-    def __init__(self, session):
-        route53_client = session.client("route53")
+    def __init__(self):
+        route53_client = boto3.client("route53")
         self.route53_client = route53_client
         self.change_ids = []
 

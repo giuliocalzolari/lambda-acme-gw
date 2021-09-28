@@ -11,10 +11,10 @@ DIRECTORY_STAGE_URL = 'https://acme-staging-v02.api.letsencrypt.org/directory'
 DIRECTORY_URL = "https://acme-v02.api.letsencrypt.org/directory"
 
 session = boto3.Session()
-r53 = Route53ChallengeCompleter(session)
-s3 = S3Helper(session)
-acm = ACMHelper(session)
-sfn = SFNHelper(session)
+r53 = Route53ChallengeCompleter()
+s3 = S3Helper()
+acm = ACMHelper()
+sfn = SFNHelper()
 
 def acme_process(doms, user):
     base_name = "{}/ssl/{}".format(user, doms[0])

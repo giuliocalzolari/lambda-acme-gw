@@ -26,8 +26,7 @@ def get_certificate(event):
             "msg": "user argv not provided or incorrect",
         }, 400
 
-    session = boto3.Session()
-    sfn = SFNHelper(session)
+    sfn = SFNHelper()
     argv = {
         "domains": domains,
         "user": user,
@@ -48,8 +47,7 @@ def get_certificate(event):
 
 @app.route('/get_certificate_worker')
 def get_certificate(event):
-    session = boto3.Session()
-    sfn = SFNHelper(session)
+    sfn = SFNHelper()
 
     uuid = api.read_input("id")
     if not api.valid_uuid(uuid):
@@ -62,9 +60,8 @@ def get_certificate(event):
 
 @app.route('/download_certificate')
 def get_certificate(event):
-    session = boto3.Session()
-    sfn = SFNHelper(session)
-    s3 = S3Helper(session)
+    sfn = SFNHelper()
+    s3 = S3Helper()
 
     uuid = api.read_input("id")
     private_key = bool(api.read_input("key"))

@@ -9,7 +9,7 @@ provider:
   region: eu-west-1
   role: LambdaIAMRole
   deploymentBucket:
-    name: gc-bin
+    name: 3541971e-ec1e-4989-9e5f-b7662b5da6e7
   stackTags: # Optional CF stack tags
     Owner: giulio.calzolari@cloudreach.com
     Purpose: acme-gw
