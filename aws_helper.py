@@ -43,6 +43,9 @@ class ApigwHelper(object):
         if self.event.get("queryStringParameters", None) is not None:
             return self.event.get("queryStringParameters", {}).get(key, None)
 
+        if self.event.get("pathParameters", None) is not None:
+            return self.event.get("pathParameters", {}).get(key, None)
+
         if self.event.get("body", None) is not None:
             return self.event.get("body", {}).get(key, None)
         return False
