@@ -8,7 +8,7 @@ api = ApigwHelper()
 sfn = SFNHelper()
 
 def lambda_handler(event, context):
-    print(json.dumps(event,indent=4, default=str))
+    # print(json.dumps(event,indent=4, default=str))
     rs = api.validate(event)
     if api.error:
         return rs
@@ -56,6 +56,30 @@ def get_worker(event):
         }, 500
 
     return sfn.describe_execution(uuid), 200
+
+
+@app.route("/renew/{id}", methods=["GET"])
+def get_renew(event):
+    uuid = api.read_input("id")
+    if not api.valid_uuid(uuid):
+        return {
+            "msg": "id not provided or incorrect",
+        }, 500
+
+    sfn.step_function_arn.replace("gw","renew")
+    return sfn.describe_execution(f"renew-{uuid}"), 200
+
+
+@app.route("/renew/{id}", methods=["DELETE"])
+def delete_renew(event):
+    uuid = api.read_input("id")
+    if not api.valid_uuid(uuid):
+        return {
+            "msg": "id not provided or incorrect",
+        }, 500
+
+    sfn.step_function_arn.replace("gw","renew")
+    return sfn.stop_execution(f"renew-{uuid}", api.user ), 200
 
 
 @app.route("/certificate/{id}", methods=["GET"])

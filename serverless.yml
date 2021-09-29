@@ -50,6 +50,15 @@ functions:
           path: /worker/{id}
           method: get
 
+      - http:
+          path: /renew/{id}
+          method: get
+
+      - http:
+          path: /renew/{id}
+          method: delete
+
+
       # - http:
       #     path: /get_certificate
       #     method: post

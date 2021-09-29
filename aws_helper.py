@@ -28,15 +28,15 @@ class ApigwHelper(object):
                 "body": 'X-Token incorrect'
             }
 
-        user, passwd = h["x-token"].split(":")
-        tk = "{}{}".format(user, os.environ.get("XTOKEN", "xxx")).encode()
+        self.user, passwd = h["x-token"].split(":")
+        tk = "{}{}".format(self.user, os.environ.get("XTOKEN", "xxx")).encode()
         if passwd != hashlib.md5(tk).hexdigest():
             return  {
                 "statusCode": 403,
                 "body": 'x-token wrong'
             }
         self.error = False
-        self.event["x-user"] = user
+        self.event["x-user"] = self.user
         return self.event
 
     def read_input(self, key):
@@ -140,6 +140,18 @@ class SFNHelper(object):
         execution_arn = self.step_function_arn.replace("stateMachine", "execution")
         response = self.client.describe_execution(
                     executionArn="{}:{}".format(execution_arn, uuid)
+                )
+        return {
+            "status": response["status"],
+            "output": json.loads(response.get("output", "{}")),
+        }
+
+
+    def stop_execution(self, uuid, user):
+        execution_arn = self.step_function_arn.replace("stateMachine", "execution")
+        response = self.client.describe_execution(
+                    executionArn="{}:{}".format(execution_arn, uuid),
+                    cause=f"renew process stop by: {user}"
                 )
         return {
             "status": response["status"],
