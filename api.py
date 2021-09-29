@@ -47,7 +47,7 @@ def create_certificate(event):
     return out, 202
 
 
-@app.route("/worker", methods=["GET"])
+@app.route("/worker/{id}", methods=["GET"])
 def get_worker(event):
     uuid = api.read_input("id")
     if not api.valid_uuid(uuid):
