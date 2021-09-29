@@ -15,7 +15,7 @@ def lambda_handler(event, context):
     return app.serve(event["resource"], event["httpMethod"], api.event)
 
 
-@app.route('/certificate', methods=["POST"])
+@app.route("/certificate", methods=["POST"])
 def create_certificate(event):
     domains = api.read_input("domains")
     if not domains:
@@ -47,7 +47,7 @@ def create_certificate(event):
     return out, 202
 
 
-@app.route('/worker', methods=["GET"])
+@app.route("/worker", methods=["GET"])
 def get_worker(event):
     uuid = api.read_input("id")
     if not api.valid_uuid(uuid):
@@ -58,7 +58,7 @@ def get_worker(event):
     return sfn.describe_execution(uuid), 200
 
 
-@app.route('/certificate/{id}', methods=["GET"])
+@app.route("/certificate/{id}", methods=["GET"])
 def get_certificate(event):
     s3 = S3Helper()
     uuid = api.read_input("id")

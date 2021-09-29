@@ -41,8 +41,7 @@ class router():
 
     def serve(self, path, method, event=None):
         try:
-            first_branch_path = '/'.join(path.split('/')[:2])
-            view_function = self.routes[first_branch_path][method]
+            view_function = self.routes[path][method]
             # parse body
             event['body'] = self.parse_body(event.get('body'))
             results, code = view_function(event)
