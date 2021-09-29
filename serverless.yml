@@ -39,16 +39,28 @@ functions:
               - ':stateMachine:acme-gw-sfn-${opt:stage}'
     events:
       - http:
-          path: /get_certificate
+          path: /certificate
           method: post
 
       - http:
-          path: /get_certificate_worker
+          path: /certificate/{id}
           method: get
 
       - http:
-          path: /download_certificate
+          path: /worker
           method: get
+
+      # - http:
+      #     path: /get_certificate
+      #     method: post
+
+      # - http:
+      #     path: /get_certificate_worker
+      #     method: get
+
+      # - http:
+      #     path: /download_certificate
+      #     method: get
 
   sfn:
     handler: sfn.lambda_handler

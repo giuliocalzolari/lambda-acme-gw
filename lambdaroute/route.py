@@ -1,6 +1,7 @@
 import json
 import logging
 from urllib.parse import parse_qs
+from collections import defaultdict
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -15,7 +16,7 @@ class HTTPException(Exception):
 
 class router():
     def __init__(self):
-        self.routes = {}
+        self.routes = defaultdict(dict)
 
     @staticmethod
     def parse_body(body):
@@ -30,17 +31,18 @@ class router():
 
         return arguments
 
-    def route(self, route_str):
-        def decorator(f):
-            self.routes[route_str] = f
-            return f
+    def route(self, route_str, methods = ["GET"]):
+        def decorator(func_name):
+            for m in methods:
+                self.routes[route_str][m] = func_name
+            return func_name
 
         return decorator
 
-    def serve(self, path, event=None):
+    def serve(self, path, method, event=None):
         try:
             first_branch_path = '/'.join(path.split('/')[:2])
-            view_function = self.routes[first_branch_path]
+            view_function = self.routes[first_branch_path][method]
             # parse body
             event['body'] = self.parse_body(event.get('body'))
             results, code = view_function(event)

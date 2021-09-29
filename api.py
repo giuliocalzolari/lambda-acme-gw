@@ -5,15 +5,18 @@ from lambdaroute import router
 from aws_helper import SFNHelper, S3Helper, ApigwHelper
 app = router()
 api = ApigwHelper()
+sfn = SFNHelper()
 
 def lambda_handler(event, context):
+    print(json.dumps(event,indent=4, default=str))
     rs = api.validate(event)
     if api.error:
         return rs
-    return app.serve(event.get('resource'), api.event)
+    return app.serve(event["resource"], event["httpMethod"], api.event)
 
-@app.route('/get_certificate')
-def get_certificate(event):
+
+@app.route('/certificate', methods=["POST"])
+def create_certificate(event):
     domains = api.read_input("domains")
     if not domains:
         return {
@@ -26,7 +29,6 @@ def get_certificate(event):
             "msg": "user argv not provided or incorrect",
         }, 400
 
-    sfn = SFNHelper()
     argv = {
         "domains": domains,
         "user": user,
@@ -45,10 +47,8 @@ def get_certificate(event):
     return out, 202
 
 
-@app.route('/get_certificate_worker')
-def get_certificate(event):
-    sfn = SFNHelper()
-
+@app.route('/worker', methods=["GET"])
+def get_worker(event):
     uuid = api.read_input("id")
     if not api.valid_uuid(uuid):
         return {
@@ -58,11 +58,9 @@ def get_certificate(event):
     return sfn.describe_execution(uuid), 200
 
 
-@app.route('/download_certificate')
+@app.route('/certificate/{id}', methods=["GET"])
 def get_certificate(event):
-    sfn = SFNHelper()
     s3 = S3Helper()
-
     uuid = api.read_input("id")
     private_key = bool(api.read_input("key"))
     csr = bool(api.read_input("csr"))
