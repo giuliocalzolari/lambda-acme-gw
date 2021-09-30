@@ -265,8 +265,8 @@ resources:
 
   UserDDBTable:
     Type: AWS::DynamoDB::Table
-    DependsOn: "acme-gw-user-${opt:stage}"
     Properties:
+      TableName: "acme-gw-user-${opt:stage}"
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         -
