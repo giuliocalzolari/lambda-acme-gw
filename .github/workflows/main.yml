@@ -41,6 +41,7 @@ jobs:
 
     - name: Serverless deploy
       uses: serverless/github-action@master
+      continue-on-error: true
       with:
         args: deploy --stage=prod --verbose
       env:

@@ -85,13 +85,12 @@ functions:
       # DIRECTORY_URL: "https://acme-v02.api.letsencrypt.org/directory"
       SFN_ARN:
         Fn::Join:
-            - ''
+            - ':'
             -
-              - 'arn:aws:states:'
+              - 'arn:aws:states'
               - Ref: 'AWS::Region'
-              - ":"
               - Ref: 'AWS::AccountId'
-              - ':stateMachine:acme-gw-sfn-${opt:stage}'
+              - 'stateMachine:acme-gw-sfn-${opt:stage}'
       S3_BUCKET:
         Ref: 'S3Bucket'
 
@@ -103,7 +102,7 @@ functions:
     environment:
       LOG_LEVEL: DEBUG
       DYNAMO_TABLE:
-        Ref: 'UserDDBTable'
+        Ref: 'UsersTable'
 
 
 resources:
@@ -263,23 +262,21 @@ resources:
                     - "lambda:InvokeFunction"
                   Resource: "*"
 
-  UserDDBTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: "acme-gw-user-${opt:stage}"
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        -
-          AttributeName: "username"
-          AttributeType: "S"
-      KeySchema:
-        -
-          AttributeName: "username"
-          KeyType: "HASH"
-      SSESpecification:
-        SSEEnabled: true
-
-
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: "acme-gw-user-${opt:stage}"
+        SSESpecification:
+          SSEEnabled: true
+        AttributeDefinitions:
+          -
+            AttributeName: username
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: username
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
 
     AcmeWorker:
       Type: 'AWS::StepFunctions::StateMachine'
