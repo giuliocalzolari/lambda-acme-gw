@@ -8,7 +8,7 @@ api = ApigwHelper()
 sfn = SFNHelper()
 
 def lambda_handler(event, context):
-    # print(json.dumps(event,indent=4, default=str))
+    print(json.dumps(event,indent=4, default=str))
     rs = api.validate(event)
     if api.error:
         return rs
