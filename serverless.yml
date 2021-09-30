@@ -49,6 +49,7 @@ functions:
             name: auth
             type: request
             functionName: auth
+            identitySource: method.request.header.Authorization
 
       - http:
           path: /worker/{id}
