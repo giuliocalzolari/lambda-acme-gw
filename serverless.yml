@@ -45,6 +45,10 @@ functions:
       - http:
           path: /certificate/{id}
           method: get
+          authorizer:
+            name: auth
+            type: request
+            functionName: auth
 
       - http:
           path: /worker/{id}
@@ -91,6 +95,16 @@ functions:
       S3_BUCKET:
         Ref: 'S3Bucket'
 
+  auth:
+    handler: auth.lambda_handler
+    runtime: python3.9
+    memorySize: "128"
+    timeout: 30
+    environment:
+      LOG_LEVEL: INFO
+      DYNAMO_TABLE:
+        Ref: 'UserDDBTable'
+
 
 resources:
   Description: ACME Gateway
@@ -101,6 +115,11 @@ resources:
         RetentionInDays: "90"
 
     SfnLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        RetentionInDays: "90"
+
+    AuthLogGroup:
       Type: AWS::Logs::LogGroup
       Properties:
         RetentionInDays: "90"
@@ -243,6 +262,24 @@ resources:
                   Action:
                     - "lambda:InvokeFunction"
                   Resource: "*"
+
+  UserDDBTable:
+    Type: AWS::DynamoDB::Table
+    DependsOn: "acme-gw-user-${opt:stage}"
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        -
+          AttributeName: "username"
+          AttributeType: "S"
+      KeySchema:
+        -
+          AttributeName: "username"
+          KeyType: "HASH"
+      SSESpecification:
+        SSEEnabled: true
+
+
 
     AcmeWorker:
       Type: 'AWS::StepFunctions::StateMachine'

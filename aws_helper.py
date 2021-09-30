@@ -40,14 +40,14 @@ class ApigwHelper(object):
         return self.event
 
     def read_input(self, key):
-        if self.event.get("queryStringParameters", None) is not None:
-            return self.event.get("queryStringParameters", {}).get(key, None)
-
         if self.event.get("pathParameters", None) is not None:
             return self.event.get("pathParameters", {}).get(key, None)
 
         if self.event.get("body", None) is not None:
             return self.event.get("body", {}).get(key, None)
+
+        if self.event.get("queryStringParameters", None) is not None:
+            return self.event.get("queryStringParameters", {}).get(key, None)
         return False
 
     def valid_uuid(self, uuid):
