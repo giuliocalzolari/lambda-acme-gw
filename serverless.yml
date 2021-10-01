@@ -282,6 +282,11 @@ resources:
             AttributeName: username
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+
+
 
     GatewayResponse:
       Type: 'AWS::ApiGateway::GatewayResponse'

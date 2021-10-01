@@ -10,6 +10,7 @@ import boto3
 import secrets
 import hashlib
 from datetime import timedelta, datetime
+import time
 
 
 dynamodb = boto3.resource('dynamodb')
@@ -57,6 +58,27 @@ def generate_token():
     expiration = datetime.now() + timedelta(hours=3)
     singrature_raw = "{}{}{}".format(token, expiration, os.environ.get("HASH", "42"))
     singrature = hashlib.sha256(singrature_raw.encode()).hexdigest()
+    expiryTimestamp = int(time.mktime(expiration.timetuple()))
+
+    boto3.client('dynamodb').put_item(
+        TableName = os.environ['DYNAMO_TABLE'],
+        Item = {
+            'username': {
+                'S': token
+            },
+            'password': {
+                'S': "token"
+            },
+            'singrature': {
+                'S': singrature
+            },
+            'ttl': {
+                'N': str(expiryTimestamp)
+            }
+        }
+    )
+
+
     return {
             'statusCode': 200,
             'headers': {
@@ -67,7 +89,7 @@ def generate_token():
             'body': json.dumps({
                     "token": token,
                     "token_type": "Bearer",
-                    "expires_in": 3600,
+                    "expires_in": 10800,
                     "expire": expiration,
                     "signature": singrature
                 }, default=str)
