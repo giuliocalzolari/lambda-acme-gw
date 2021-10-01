@@ -7,6 +7,10 @@ import json
 import logging
 import base64
 import boto3
+import secrets
+import hashlib
+from datetime import timedelta, datetime
+
 
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ['DYNAMO_TABLE'])
@@ -48,11 +52,33 @@ def db_check(event, username, username_password_hash, password):
     log.debug("authResponse: " + json.dumps(authResponse))
     return authResponse
 
+def generate_token():
+    token = secrets.token_urlsafe()
+    expiration = datetime.now() + timedelta(hours=3)
+    singrature_raw = "{}{}{}".format(token, expiration, os.environ.get("HASH", "42"))
+    singrature = hashlib.sha256(singrature_raw.encode()).hexdigest()
+    return {
+            'statusCode': 200,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Credentials': True
+            },
+            'body': json.dumps({
+                    "token": token,
+                    "expire": expiration,
+                    "signature": singrature
+                })
+            }
+
 
 def lambda_handler(event, context):
     # sourcery skip: extract-method, inline-immediately-returned-variable
     # log.debug("Event: " + json.dumps(event))
     print(json.dumps(event,indent=4, default=str))
+
+    if event["resource"] == "/auth" and event["httpMethod"] == "POST":
+        return generate_token()
 
     # Ensure the incoming Lambda event is for a request authorizer
     if event['type'] != 'REQUEST':
