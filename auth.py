@@ -66,9 +66,11 @@ def generate_token():
             },
             'body': json.dumps({
                     "token": token,
+                    "token_type": "Bearer",
+                    "expires_in": 3600,
                     "expire": expiration,
                     "signature": singrature
-                })
+                }, default=str)
             }
 
 
