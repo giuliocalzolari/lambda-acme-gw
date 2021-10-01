@@ -14,15 +14,46 @@ import time
 
 
 dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table(os.environ['DYNAMO_TABLE'])
+table = dynamodb.Table(os.environ['DYNAMO_USER_TABLE'])
 log_level = os.environ.get('LOG_LEVEL', "INFO")
 log = logging.getLogger(__name__)
 logging.getLogger().setLevel(log_level)
+BEARER_TOKEN_PATTERN = re.compile('^Bearer[ ]+([^ ]+)[ ]*$', re.I)
+
+
+def get_from_ddb(key):
+    dynamodbClient = boto3.client('dynamodb')
+    epochTimeNow = int(time.time())
+    try:
+        res = dynamodbClient.query(
+            TableName = os.environ['DYNAMO_TOKEN_TABLE'],
+            KeyConditionExpression = '#username = :username',
+            FilterExpression = '#t > :ttl',
+            ExpressionAttributeNames = {
+                '#t': 'ttl',
+                '#username': 'username'
+            },
+            ExpressionAttributeValues = {
+                ':ttl': {
+                    'N': str(epochTimeNow),
+                },
+                ':username': {
+                    'S': key
+                }
+            }
+        )
+        if 'Items' in res and len(res['Items']) >= 1:
+            return res['Items']
+        return None
+    except Exception as e:
+        print('Exception: ', e)
+        return None
 
 def db_check(event, username, username_password_hash, password):
 
     policy = AuthPolicy(event)
     log.debug("username: " + username)
+
     # Get the password from DynamoDB for the username
     item = table.get_item(ConsistentRead=True, Key={"username": username})
     if item.get('Item') is not None:
@@ -55,19 +86,16 @@ def db_check(event, username, username_password_hash, password):
 
 def generate_token():
     token = secrets.token_urlsafe()
-    expiration = datetime.now() + timedelta(hours=3)
+    expiration = datetime.now() + timedelta(hours=1)
     singrature_raw = "{}{}{}".format(token, expiration, os.environ.get("HASH", "42"))
     singrature = hashlib.sha256(singrature_raw.encode()).hexdigest()
     expiryTimestamp = int(time.mktime(expiration.timetuple()))
 
     boto3.client('dynamodb').put_item(
-        TableName = os.environ['DYNAMO_TABLE'],
+        TableName = os.environ['DYNAMO_TOKEN_TABLE'],
         Item = {
-            'username': {
+            'token': {
                 'S': token
-            },
-            'password': {
-                'S': "token"
             },
             'singrature': {
                 'S': singrature
@@ -77,8 +105,6 @@ def generate_token():
             }
         }
     )
-
-
     return {
             'statusCode': 200,
             'headers': {
@@ -87,9 +113,9 @@ def generate_token():
                 'Access-Control-Allow-Credentials': True
             },
             'body': json.dumps({
-                    "token": token,
+                    "access_token": token,
                     "token_type": "Bearer",
-                    "expires_in": 10800,
+                    "expires_in": 3600,
                     "expire": expiration,
                     "signature": singrature
                 }, default=str)
@@ -113,15 +139,22 @@ def lambda_handler(event, context):
         authorization_header = {k.lower(): v for k, v in event['headers'].items() if k.lower() == 'authorization'}
         log.debug("authorization: " + json.dumps(authorization_header))
 
+        policy = AuthPolicy(event)
+        match = BEARER_TOKEN_PATTERN.fullmatch(authorization_header['authorization'])
+        if match is None:
+            return policy.denyMethod(event['requestContext']['httpMethod'], event['path'])
+        else:
+            return policy.allowMethod(event['requestContext']['httpMethod'], event['path'])
+
         # Get the username:password hash from the authorization header
-        username_password_hash = authorization_header['authorization'].split()[1]
-        log.debug("username_password_hash: " + username_password_hash)
+        # username_password_hash = authorization_header['authorization'].split()[1]
+        # log.debug("username_password_hash: " + username_password_hash)
 
-        # Decode username_password_hash and get username
-        username , passwd = base64.standard_b64decode(username_password_hash).decode('utf-8').split(':')
-        authResponse = db_check(event, username, username_password_hash, passwd)
+        # # Decode username_password_hash and get username
+        # username , passwd = base64.standard_b64decode(username_password_hash).decode('utf-8').split(':')
+        # authResponse = db_check(event, username, username_password_hash, passwd)
 
-        return authResponse
+        # return authResponse
     except Exception:
         raise Exception('Unauthorized')
 

@@ -102,8 +102,10 @@ functions:
     timeout: 30
     environment:
       LOG_LEVEL: INFO
-      DYNAMO_TABLE:
-        Ref: 'UsersTable'
+      DYNAMO_USER_TABLE:
+        Ref: UsersTable
+      DYNAMO_TOKEN_TABLE:
+        Ref: TokenTable
     events:
       - http:
           path: /auth
@@ -233,6 +235,7 @@ resources:
                     - dynamodb:Scan
                   Resource:
                     - Fn::GetAtt: [ UsersTable, Arn ]
+                    - Fn::GetAtt: [ TokenTable, Arn ]
 
 
 
@@ -295,6 +298,22 @@ resources:
         KeySchema:
           -
             AttributeName: username
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+    TokenTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: "acme-gw-token-${opt:stage}"
+        SSESpecification:
+          SSEEnabled: true
+        AttributeDefinitions:
+          -
+            AttributeName: token
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: token
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
         TimeToLiveSpecification:
