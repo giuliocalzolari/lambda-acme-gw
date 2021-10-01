@@ -14,16 +14,51 @@ log_level = os.environ.get('LOG_LEVEL', "INFO")
 log = logging.getLogger(__name__)
 logging.getLogger().setLevel(log_level)
 
+def db_check(event, username, username_password_hash, password):
+
+    policy = AuthPolicy(event)
+    log.debug("username: " + username)
+    # Get the password from DynamoDB for the username
+    item = table.get_item(ConsistentRead=True, Key={"username": username})
+    if item.get('Item') is not None:
+        log.debug("item: " + json.dumps(item))
+        ddb_password = item.get('Item').get('password')
+        log.debug("ddb_password:" + json.dumps(ddb_password))
+
+        if ddb_password is not None:
+            ddb_username_password = (username + ":" + ddb_password)
+            ddb_username_password_hash = base64.standard_b64encode(ddb_username_password)
+            log.debug("ddb_username_password_hash:" + ddb_username_password_hash)
+
+            if username_password_hash == ddb_username_password_hash:
+                policy.allowMethod(event['requestContext']['httpMethod'], event['path'])
+                log.info("password match for: " + username)
+            else:
+                policy.denyMethod(event['requestContext']['httpMethod'], event['path'])
+                log.info("password does not match for: " + username)
+        else:
+            log.info("No password found for username:" + username)
+            policy.denyMethod(event['requestContext']['httpMethod'], event['path'])
+    else:
+        log.info("Did not find username: " + username)
+        policy.denyMethod(event['requestContext']['httpMethod'], event['path'])
+
+    # Finally, build the policy
+    authResponse = policy.build()
+    log.debug("authResponse: " + json.dumps(authResponse))
+    return authResponse
+
 
 def lambda_handler(event, context):
-    log.debug("Event: " + json.dumps(event))
+    # sourcery skip: extract-method, inline-immediately-returned-variable
+    # log.debug("Event: " + json.dumps(event))
+    print(json.dumps(event,indent=4, default=str))
 
     # Ensure the incoming Lambda event is for a request authorizer
     if event['type'] != 'REQUEST':
         raise Exception('Unauthorized')
 
     try:
-        policy = AuthPolicy(event)
         # Get authorization header in lowercase
         authorization_header = {k.lower(): v for k, v in event['headers'].items() if k.lower() == 'authorization'}
         log.debug("authorization: " + json.dumps(authorization_header))
@@ -33,37 +68,8 @@ def lambda_handler(event, context):
         log.debug("username_password_hash: " + username_password_hash)
 
         # Decode username_password_hash and get username
-        username = base64.standard_b64decode(username_password_hash).split(':')[0]
-        log.debug("username: " + username)
-
-        # Get the password from DynamoDB for the username
-        item = table.get_item(ConsistentRead=True, Key={"username": username})
-        if item.get('Item') is not None:
-            log.debug("item: " + json.dumps(item))
-            ddb_password = item.get('Item').get('password')
-            log.debug("ddb_password:" + json.dumps(ddb_password))
-
-            if ddb_password is not None:
-                ddb_username_password = (username + ":" + ddb_password)
-                ddb_username_password_hash = base64.standard_b64encode(ddb_username_password)
-                log.debug("ddb_username_password_hash:" + ddb_username_password_hash)
-
-                if username_password_hash == ddb_username_password_hash:
-                    policy.allowMethod(event['requestContext']['httpMethod'], event['path'])
-                    log.info("password match for: " + username)
-                else:
-                    policy.denyMethod(event['requestContext']['httpMethod'], event['path'])
-                    log.info("password does not match for: " + username)
-            else:
-                log.info("No password found for username:" + username)
-                policy.denyMethod(event['requestContext']['httpMethod'], event['path'])
-        else:
-            log.info("Did not find username: " + username)
-            policy.denyMethod(event['requestContext']['httpMethod'], event['path'])
-
-        # Finally, build the policy
-        authResponse = policy.build()
-        log.debug("authResponse: " + json.dumps(authResponse))
+        username , passwd = base64.standard_b64decode(username_password_hash).decode('utf-8').split(':')
+        authResponse = db_check(event, username, username_password_hash, passwd)
 
         return authResponse
     except Exception:
