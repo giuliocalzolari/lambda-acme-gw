@@ -104,6 +104,10 @@ functions:
       LOG_LEVEL: DEBUG
       DYNAMO_TABLE:
         Ref: 'UsersTable'
+    events:
+      - http:
+          path: /auth
+          method: post
 
 
 resources:
