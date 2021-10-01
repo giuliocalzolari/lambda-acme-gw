@@ -11,7 +11,8 @@ import secrets
 import hashlib
 from datetime import timedelta, datetime
 import time
-
+from aws_helper import ApigwHelper
+api = ApigwHelper()
 
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ['DYNAMO_USER_TABLE'])
@@ -127,8 +128,13 @@ def lambda_handler(event, context):
     # log.debug("Event: " + json.dumps(event))
     print(json.dumps(event,indent=4, default=str))
 
+    api.parse_event(event)
+
     if event["resource"] == "/auth" and event["httpMethod"] == "POST":
-        return generate_token()
+        rs = api.parse_authentication()
+        if api.error:
+            return rs
+        return generate_token(event)
 
     # Ensure the incoming Lambda event is for a request authorizer
     if event['type'] != 'REQUEST':

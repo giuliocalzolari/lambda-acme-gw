@@ -11,11 +11,38 @@ class ApigwHelper(object):
     def __init__(self):
         self.error = True
 
-    def validate(self, event):
+    def parse_event(self, event):
         self.event = event
         if os.environ.get("DEBUG", "none") == "enable":
             print(json.dumps(event, indent=4))
 
+    def parse_authentication(self):
+
+        authorization_header = {k.lower(): v for k, v in self.event['headers'].items() if k.lower() == 'authorization'}
+        # h = self.event["headers"]
+        # if "x-token" not in h:
+        #     return  {
+        #         "statusCode": 500,
+        #         "body": 'X-Token is missing'
+        #     }
+        # elif ":" not in h["x-token"]:
+        #     return  {
+        #         "statusCode": 500,
+        #         "body": 'X-Token incorrect'
+        #     }
+
+        # self.user, passwd = h["x-token"].split(":")
+        # tk = "{}{}".format(self.user, os.environ.get("XTOKEN", "xxx")).encode()
+        # if passwd != hashlib.md5(tk).hexdigest():
+        #     return  {
+        #         "statusCode": 403,
+        #         "body": 'x-token wrong'
+        #     }
+        # self.error = False
+        # self.event["x-user"] = self.user
+        # return self.event
+
+    def validate(self):
         h = self.event["headers"]
         if "x-token" not in h:
             return  {

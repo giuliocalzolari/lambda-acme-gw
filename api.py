@@ -9,7 +9,8 @@ sfn = SFNHelper()
 
 def lambda_handler(event, context):
     print(json.dumps(event,indent=4, default=str))
-    rs = api.validate(event)
+    api.parse_event(event)
+    rs = api.validate()
     if api.error:
         return rs
     return app.serve(event["resource"], event["httpMethod"], api.event)
