@@ -101,7 +101,7 @@ functions:
     memorySize: "128"
     timeout: 30
     environment:
-      LOG_LEVEL: DEBUG
+      LOG_LEVEL: INFO
       DYNAMO_TABLE:
         Ref: 'UsersTable'
     events:
@@ -220,6 +220,21 @@ resources:
                     - acm:ImportCertificate
                   Resource:
                     - '*'
+
+          - PolicyName: DynamoDB
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - dynamodb:GetItem
+                    - dynamodb:PutItem
+                    - dynamodb:Query
+                    - dynamodb:Scan
+                  Resource:
+                    - Fn::GetAtt: [ UsersTable, Arn ]
+
+
 
           - PolicyName: CloudwatchLog
             PolicyDocument:
